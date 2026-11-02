@@ -1,0 +1,6 @@
+/* NATHAN: equalizer towers that show on the CD */
+/* equalizer towers (sits across the bottom of the CD) */
+.eq{position:absolute;left:30%;right:8%;bottom:16%;height:30%;display:flex;align-items:flex-end;gap:4px;z-index:4;opacity:0;transition:opacity .3s;pointer-events:none}
+.eq.on{opacity:1}
+.eq i{flex:1;height:10%;background:repeating-linear-gradient(to top,var(--cyan) 0 6px,transparent 6px 9px);transition:height .12s}
+
