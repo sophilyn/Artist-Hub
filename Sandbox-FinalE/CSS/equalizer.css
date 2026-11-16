@@ -1,6 +1,105 @@
-/* NATHAN: equalizer towers that show on the CD */
-/* equalizer towers (sits across the bottom of the CD) */
-.eq{position:absolute;left:30%;right:8%;bottom:16%;height:30%;display:flex;align-items:flex-end;gap:4px;z-index:4;opacity:0;transition:opacity .3s;pointer-events:none}
-.eq.on{opacity:1}
-.eq i{flex:1;height:10%;background:repeating-linear-gradient(to top,var(--cyan) 0 6px,transparent 6px 9px);transition:height .12s}
+/* Dedicated Bottom Audio Visualizer Dock/Floor */
+.eq-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 110px;
+  background: linear-gradient(180deg, rgba(19, 7, 34, 0) 0%, rgba(18, 6, 32, 0.72) 28%, rgba(13, 4, 24, 0.92) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 4rem 14px 4rem;
+  pointer-events: none;
+}
+.eq-dock::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+  right: 15%;
+  height: 48px;
+  background: radial-gradient(ellipse at bottom, rgba(255, 79, 163, 0.16) 0%, rgba(77, 225, 255, 0.1) 45%, transparent 70%);
+  pointer-events: none;
+  filter: blur(18px);
+}
+.eq-dock-inner {
+  position: relative;
+  width: 100%;
+  max-width: 1360px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+.eq {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 80px;
+  opacity: 0.35;
+  transition: opacity 0.5s ease;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+.eq.on {
+  opacity: 1;
+}
+.eq-column {
+  flex: 1;
+  max-width: 16px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+  height: 100%;
+  justify-content: flex-start;
+}
+.eq-block {
+  width: 100%;
+  height: 6px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.14;
+  transition: opacity 0.08s ease, 
+              background-color 0.08s ease, 
+              box-shadow 0.08s ease;
+}
 
+/* Translucent neon lighting with refined glowing cyber palette */
+.eq-block.active.cyan {
+  background: #4de1ff;
+  opacity: 0.82;
+  box-shadow: 0 0 10px rgba(77, 225, 255, 0.65), 0 0 2px #fff;
+}
+.eq-block.active.yellow {
+  background: #ffe600;
+  opacity: 0.85;
+  box-shadow: 0 0 11px rgba(255, 230, 0, 0.7), 0 0 2px #fff;
+}
+.eq-block.active.pink {
+  background: #ff4fa3;
+  opacity: 0.9;
+  box-shadow: 0 0 13px rgba(255, 79, 163, 0.8), 0 0 3px #fff;
+}
+.eq-block.active.purple {
+  background: #b55fe6;
+  opacity: 0.88;
+  box-shadow: 0 0 12px rgba(181, 95, 230, 0.75), 0 0 2px #fff;
+}
+
+@media(max-width: 900px) {
+  .eq-dock {
+    height: 90px;
+    padding: 0 1.5rem 10px 1.5rem;
+  }
+
+  .eq {
+    gap: 4px;
+    height: 65px;
+  }
+}

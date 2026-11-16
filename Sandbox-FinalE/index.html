@@ -1,34 +1,93 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Home | Artist Name</title>
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/home.css">
-<link rel="stylesheet" href="css/equalizer.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Home | Artist Name</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/equalizer.css">
 </head>
+
 <body data-page="home">
-<header class="nav"><a class="logo" href="index.html">ARTIST NAME</a><nav><a href="index.html" data-p="home">Home</a><a href="artist.html" data-p="artist">Artist Info</a><a href="videos.html" data-p="videos">Videos</a><a href="events.html" data-p="events">Events</a></nav></header>
-<main class="home">
-  <section class="stage">
-    <div class="cd-wrap">
-      <div class="cd" id="cd" title="Click to play / pause"><div class="hole"></div></div>
+
+  <!-- Navigation -->
+  <header class="nav">
+    <a class="logo" href="index.html">ARTIST NAME</a>
+
+    <nav>
+      <a href="index.html" data-p="home">Home</a>
+      <a href="artist.html" data-p="artist">Artist Info</a>
+      <a href="videos.html" data-p="videos">Videos</a>
+      <a href="events.html" data-p="events">Events</a>
+    </nav>
+  </header>
+
+  <!-- Main Homepage -->
+  <main class="home">
+
+    <section class="stage">
+      <div class="cd-wrap">
+        <div class="cd" id="cd"
+          style="--cover: linear-gradient(135deg,#ff4fa3,#7b2ff7);"
+          title="Click to play / pause">
+          <div class="hole"></div>
+        </div>
+      </div>
+
+      <ul class="tabs" id="tabs"></ul>
+    </section>
+
+    <section class="info">
+
+      <div aria-hidden="true"
+        class="album-art-backdrop"
+        id="art-backdrop"
+        style="--art-cover: linear-gradient(135deg,#ff4fa3,#7b2ff7);">
+      </div>
+
+      <div class="info-content" id="info-content">
+        <p class="album-year" id="year">2024</p>
+        <h1 id="title">Song One</h1>
+        <h2 id="album">Album One</h2>
+
+        <p class="lyrics" id="lyrics">
+          Write a few lines of lyrics
+          or a short description
+          of the song here.
+        </p>
+      </div>
+
+      <p class="hint">
+        Hover a pill to switch albums. Click the disc to play / pause animation.
+      </p>
+
+    </section>
+
+    <audio crossorigin="anonymous" id="audio"></audio>
+
+  </main>
+
+  <!-- Equalizer -->
+  <footer class="eq-dock">
+    <div class="eq-dock-inner">
       <div class="eq" id="eq"></div>
     </div>
-    <ul class="tabs" id="tabs"></ul>
-  </section>
-  <section class="info">
-    <p class="album-year" id="year"></p>
-    <h1 id="title">Song Title</h1>
-    <h2 id="album">Album Name</h2>
-    <p class="lyrics" id="lyrics"></p>
-    <p class="hint">Hover a pill to switch albums. Click the disc to play music.</p>
-  </section>
-  <audio id="audio"></audio>
-</main>
-<script src="js/main.js"></script>
-<script src="js/equalizer.js"></script>
-<script src="js/home.js"></script>
+  </footer>
+
+  <!-- JavaScript Files -->
+  <script src="js/main.js" defer></script>
+  <script src="js/home.js" defer></script>
+
 </body>
 </html>
+ 
