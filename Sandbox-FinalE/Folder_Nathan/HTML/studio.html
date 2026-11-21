@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studio | Artist Name</title>
+
+  <!-- Fonts: Share Tech Mono is only used for the LCD time display.
+       The site fonts (DM Sans / Unbounded) come from base.css -->
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <!-- EXTERNAL CSS: shared site styles first, then the Studio's own file -->
+  <link rel="stylesheet" href="../../CSS/base.css">
+  <link rel="stylesheet" href="../External_CSS/studio.css">
+
+  <!-- INTERNAL CSS: small rules that only this page needs -->
+  <style>
+    /* Gradient glow under the page title */
+    .studio h1 span { background: linear-gradient(90deg, var(--pink), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    /* Layout of the export buttons inside the dialog */
+    #exportDlg .row button { flex: 1 1 130px; padding: .7rem; }
+  </style>
+</head>
+
+<body class="studio-page" data-page="studio">
+
+  <!-- Navigation (same bar as the other pages; paths go up two folders) -->
+  <header class="nav">
+    <a class="logo" href="../../index.html">ARTIST NAME</a>
+    <nav>
+      <a href="../../index.html" data-p="home">Home</a>
+      <a href="../../artist.html" data-p="artist">Artist Info</a>
+      <a href="../../videos.html" data-p="videos">Videos</a>
+      <a href="../../events.html" data-p="events">Events</a>
+      <a href="studio.html" data-p="studio">Studio</a>
+    </nav>
+  </header>
+
+  <main class="studio">
+    <h1><span>Studio</span></h1>
+    <!-- INLINE CSS: style="" written directly on the element -->
+    <p class="sub" style="max-width: 70ch;">Build a song in your browser with real band instruments and Daft-Punk-style synths, then export it as WAV, MP3 or FLAC &mdash; or send it to FL Studio as MIDI.</p>
+
+    <!-- ===== Transport bar ===== -->
+    <section class="panel transport" aria-label="Transport">
+      <div class="group">
+        <button id="btnPlay" class="big">&#9654; Play</button>
+        <button id="btnStop">&#9632; Stop</button>
+        <button id="btnRec" class="rec" title="Record notes from the computer keyboard">&#9679; Rec</button>
+        <button id="btnLoop" class="on">&#8635; Loop</button>
+      </div>
+      <div class="lcd" id="time" aria-live="off">BAR 01.1  0:00</div>
+      <canvas id="viz" width="150" height="34" aria-hidden="true"></canvas>
+      <div class="group">
+        <label for="bpm">BPM</label><input id="bpm" type="number" min="40" max="220" value="120">
+        <label for="bars">Bars</label>
+        <select id="bars">
+          <option>1</option><option>2</option><option>4</option><option>8</option><option>12</option><option>16</option><option>24</option><option>32</option>
+        </select>
+        <label for="snap">Snap</label>
+        <select id="snap"><option value="1">1/16</option><option value="2" selected>1/8</option><option value="4">1/4</option></select>
+        <label for="zoom">Zoom</label>
+        <select id="zoom"><option value="16">Small</option><option value="28" selected>Normal</option><option value="44">Large</option></select>
+        <label for="reverb">Reverb</label><input id="reverb" type="range" min="0" max="0.8" step="0.01" value="0.15">
+      </div>
+      <div class="group">
+        <input id="songName" type="text" value="My Song" aria-label="Song name">
+        <button id="btnUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+        <button id="btnRedo" title="Redo (Ctrl+Y)">&#8631;</button>
+        <button id="btnDemo">Demo song</button>
+        <button id="btnNew">New</button>
+        <button id="btnOpen">Open</button>
+        <button id="btnSave">Save</button>
+        <button id="btnExport" class="accent">Export</button>
+        <input id="fileOpen" type="file" accept=".json" hidden>
+      </div>
+    </section>
+
+    <!-- ===== Track list + piano roll ===== -->
+    <div class="workspace">
+      <aside class="panel tracks" aria-label="Tracks">
+        <h2>Tracks</h2>
+        <ul id="trackList"></ul>
+        <div class="add-row">
+          <select id="addInst" aria-label="Instrument for the new track"></select>
+          <button id="btnAdd">+ Add</button>
+        </div>
+      </aside>
+
+      <section class="panel roll-panel" aria-label="Piano roll">
+        <div class="roll-head"><h2 id="rollTitle">Piano roll</h2><span><button id="btnNames" class="mini" title="Show the note name inside each note">Note names</button> <button id="btnAccidental" class="mini" title="Show note names with sharps or flats">Sharps &#9839;</button> Click = add note &middot; drag edge = length &middot; right-click = delete</span></div>
+        <div class="roll-scroller" id="rollScroller">
+          <div class="roll-inner">
+            <div class="roll-keys"><div class="roll-corner"></div><canvas id="rollKeys"></canvas></div>
+            <div class="roll-main">
+              <canvas id="rollRuler" title="Click to set where playback starts"></canvas>
+              <canvas id="rollGrid"></canvas>
+              <div class="roll-playhead" id="rollPlayhead"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <p class="statusbar" id="status" role="status">Loading...</p>
+
+    <section class="panel help">
+      <b>Keys:</b> <kbd>Space</kbd> play/stop &middot; <kbd>Ctrl+Z</kbd> undo &middot; <kbd>Del</kbd> delete selected note &middot;
+      play the selected instrument with <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd> <kbd>K</kbd> (<kbd>Z</kbd>/<kbd>X</kbd> change octave). Arm <b>Rec</b>, press Play and play to record.<br>
+      <b>FL Studio:</b> Export &rarr; <b>MIDI</b> and drag the .mid onto FL's piano roll (notes + instrument slots), or export <b>Stems</b> (one WAV per track), unzip and drag them into the Playlist.
+    </section>
+
+    <p class="credits">
+      Instrument recordings: FluidR3 GM soundfont by Frank Wen, converted by
+      <a href="https://github.com/gleitz/midi-js-soundfonts" target="_blank" rel="noopener">midi-js-soundfonts</a>
+      (<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>).
+      MP3 encoding: <a href="https://github.com/zhuker/lamejs" target="_blank" rel="noopener">lamejs</a> (LGPL).
+      Synth and drum sounds are generated live with the Web Audio API.
+    </p>
+  </main>
+
+  <!-- ===== Export dialog ===== -->
+  <dialog id="exportDlg">
+    <h2>Export song</h2>
+    <h3>AUDIO FILES</h3>
+    <div class="row">
+      <button data-fmt="wav">WAV<br><small>lossless</small></button>
+      <button data-fmt="mp3">MP3<br><small>192 kbps</small></button>
+      <button data-fmt="flac">FLAC<br><small>lossless, smaller</small></button>
+    </div>
+    <h3>FOR FL STUDIO &amp; OTHER DAWS</h3>
+    <div class="row">
+      <button data-fmt="mid">MIDI<br><small>notes + instruments</small></button>
+      <button data-fmt="stems">Stems (.zip)<br><small>one WAV per track</small></button>
+      <button data-fmt="json">Project<br><small>.json backup</small></button>
+    </div>
+    <p class="note" id="exportStatus"></p>
+    <progress id="exportProgress" max="1" value="0"></progress>
+    <p style="text-align:right; margin-top:1rem;"><button id="btnCloseExport">Close</button></p>
+  </dialog>
+
+  <!-- EXTERNAL JavaScript: order matters (each file uses the one before it) -->
+  <script src="../../js/main.js"></script>                       <!-- site nav highlighting -->
+  <script src="../External_JS/lame.all.js"></script>              <!-- MP3 encoder library -->
+  <script src="../External_JS/instruments.js"></script>
+  <script src="../External_JS/engine.js"></script>
+  <script src="../External_JS/exporters.js"></script>
+  <script src="../External_JS/piano-roll.js"></script>
+  <script src="../External_JS/studio.js"></script>
+
+  <!-- INTERNAL JavaScript: starts the Studio once the page has loaded -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      Studio.init();
+    });
+  </script>
+</body>
+</html>

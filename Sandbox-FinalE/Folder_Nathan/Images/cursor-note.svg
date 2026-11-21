@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+  <!-- Custom cursor: small pink arrow with a cyan outline. The tip is at the top-left corner (hot spot 1,1) so clicks land exactly where you aim -->
+  <path d="M1.5 1.5 L1.5 15 L5.2 11.6 L8 18 L10.6 16.9 L7.9 10.6 L13 10.6 Z" fill="#ff4fa3" stroke="#4de1ff" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

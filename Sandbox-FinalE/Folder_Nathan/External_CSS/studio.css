@@ -1,0 +1,205 @@
+/* ==========================================================================
+   studio.css  (Nathan's Studio) - EXTERNAL stylesheet
+   Uses the colour variables from the shared ../../CSS/base.css
+   (--pink, --cyan, --yellow, --purple, --bg2 ...), so the Studio matches
+   the rest of the Artist Hub site.
+   ========================================================================== */
+
+/* Custom mouse cursor: a small pink arrow (SVG file in ../Images).
+   The two numbers are the "hot spot" - the exact pixel that clicks. It sits on
+   the arrow's tip, so aiming is precise. Buttons use the normal pointer hand
+   and the piano roll uses a crosshair, which are easier to aim with. */
+body.studio-page {
+  cursor: url("../Images/cursor-note.svg") 1 1, auto;
+}
+body.studio-page button,
+body.studio-page select,
+body.studio-page a,
+body.studio-page .track,
+body.studio-page input[type="range"] {
+  cursor: pointer;
+}
+
+/* Page frame */
+.studio {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 1.2rem 2rem;
+}
+.studio h1 {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin-bottom: .3rem;
+}
+.studio .sub {
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+/* Glass panels used for the transport bar, track list and piano roll */
+.panel {
+  background: rgba(36, 14, 59, .72);
+  border: 1px solid rgba(157, 78, 221, .4);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .35);
+}
+
+/* ---------- Transport bar ---------- */
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem 1rem;
+  padding: .8rem 1rem;
+  margin-bottom: .9rem;
+}
+.transport .group { display: flex; align-items: center; gap: .4rem; }
+.transport label { color: var(--muted); font-size: .8rem; }
+
+button, select, input[type="number"], input[type="text"] {
+  font-family: var(--body);
+  font-size: .9rem;
+  color: var(--text);
+  background: #2d1450;
+  border: 1px solid rgba(157, 78, 221, .55);
+  border-radius: 8px;
+  padding: .4rem .7rem;
+}
+button:hover:not(:disabled), select:hover { border-color: var(--cyan); }
+button:disabled { opacity: .5; }
+button.big { font-weight: 700; min-width: 5.6rem; }
+button.on { background: var(--pink); border-color: var(--pink); color: #1a0830; }
+button.rec.on { background: #ff3b3b; border-color: #ff3b3b; color: #fff; }
+button.accent { background: linear-gradient(135deg, var(--pink), var(--purple)); border: 0; font-weight: 700; }
+input[type="number"] { width: 4.2rem; }
+input[type="text"] { width: 11rem; }
+input[type="range"] { accent-color: var(--pink); width: 90px; }
+
+/* LCD-style readouts */
+.lcd {
+  font-family: "Share Tech Mono", monospace;
+  font-size: 1.15rem;
+  color: var(--cyan);
+  background: #0c0418;
+  border: 1px solid rgba(77, 225, 255, .4);
+  border-radius: 8px;
+  padding: .3rem .7rem;
+  min-width: 11rem;
+  text-align: center;
+}
+#viz { background: #0c0418; border-radius: 8px; border: 1px solid rgba(77, 225, 255, .25); }
+
+/* ---------- Workspace: track list on the left, piano roll on the right ---------- */
+.workspace {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: .9rem;
+  align-items: start;
+}
+
+.tracks { padding: .8rem; }
+.tracks h2 { font-size: .95rem; margin-bottom: .6rem; }
+#trackList { list-style: none; display: flex; flex-direction: column; gap: .5rem; max-height: 560px; overflow-y: auto; }
+
+.track {
+  --tc: var(--pink);                 /* set per track from JavaScript */
+  background: rgba(0, 0, 0, .25);
+  border: 1px solid transparent;
+  border-left: 5px solid var(--tc);
+  border-radius: 10px;
+  padding: .5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+.track.selected { border-color: var(--tc); background: rgba(255, 255, 255, .07); }
+.track-top { display: flex; align-items: center; gap: .3rem; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; background: var(--tc); flex: none; }
+.track-name { color: var(--text); flex: 1; min-width: 0; padding: .2rem .4rem; background: transparent; border-color: transparent; }
+.track-name:focus { border-color: var(--cyan); background: #2d1450; }
+.track-inst { width: 100%; padding: .25rem .4rem; font-size: .82rem; }
+.track-vol { width: 100%; }
+.thumb { width: 100%; height: 28px; background: rgba(0, 0, 0, .35); border-radius: 5px; }
+button.mini { padding: .1rem .45rem; font-size: .75rem; border-radius: 6px; }
+button.mini.on { background: var(--yellow); border-color: var(--yellow); color: #231a00; }
+/* Track state: muted tracks are greyed out with a red badge, soloed ones glow */
+button.mini.mute.on { background: #ff3b3b; border-color: #ff3b3b; color: #fff; }
+.track.muted, .track.silenced { opacity: .45; filter: grayscale(.75); }
+.track.muted .track-name { text-decoration: line-through; }
+.track.soloed { box-shadow: 0 0 0 1px var(--cyan), 0 0 14px rgba(77, 225, 255, .35); }
+.badge { font-size: .62rem; font-weight: 700; letter-spacing: .05em; padding: .1rem .4rem; border-radius: 5px; white-space: nowrap; }
+.badge.muted { background: #ff3b3b; color: #fff; }
+.badge.solo { background: var(--cyan); color: #06222b; }
+.badge.silenced { background: #55456e; color: #fff; }
+button.mini.solo.on { background: var(--cyan); border-color: var(--cyan); }
+.add-row { display: flex; gap: .4rem; margin-top: .7rem; }
+.add-row select { flex: 1; min-width: 0; }
+
+/* ---------- Piano roll ---------- */
+.roll-panel { padding: .6rem; min-width: 0; }
+.roll-head { display: flex; justify-content: space-between; align-items: center; padding: 0 .3rem .5rem; }
+.roll-head h2 { font-size: .95rem; }
+.roll-head span { color: var(--muted); font-size: .78rem; }
+
+.roll-scroller {
+  height: 520px;
+  overflow: auto;
+  background: #130722;
+  border-radius: 10px;
+  position: relative;
+}
+.roll-inner { display: flex; width: max-content; position: relative; }
+
+/* Keyboard column sticks to the left while scrolling sideways */
+.roll-keys { position: sticky; left: 0; z-index: 4; flex: none; width: 72px; background: #130722; }
+.roll-corner { position: sticky; top: 0; z-index: 5; height: 22px; background: #1b0a30; border-bottom: 1px solid rgba(255, 255, 255, .15); }
+
+.roll-main { position: relative; flex: none; }
+#rollRuler { position: sticky; top: 0; z-index: 3; display: block; }
+#rollGrid { display: block; cursor: crosshair; }
+#rollGrid.on-note { cursor: grab; }
+#rollGrid.on-edge { cursor: ew-resize; }
+
+.roll-playhead {
+  position: absolute;
+  top: 0; left: 0;
+  width: 2px;
+  background: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
+  pointer-events: none;              /* clicks pass through to the grid */
+  z-index: 2;
+}
+
+/* ---------- Status line, help and footer ---------- */
+.statusbar { margin-top: .8rem; color: var(--muted); font-size: .85rem; min-height: 1.3rem; }
+.help { margin-top: .6rem; padding: .8rem 1rem; font-size: .85rem; color: var(--muted); line-height: 1.55; }
+.help b { color: var(--text); }
+.credits { margin-top: 1rem; font-size: .75rem; color: var(--muted); }
+kbd {
+  background: #2d1450;
+  border: 1px solid rgba(157, 78, 221, .6);
+  border-radius: 4px;
+  padding: 0 .35rem;
+  font-size: .8rem;
+}
+
+/* ---------- Export dialog ---------- */
+dialog {
+  background: #1e0b34;
+  color: var(--text);
+  border: 1px solid var(--purple);
+  border-radius: 16px;
+  padding: 1.4rem;
+  width: min(520px, 92vw);
+}
+dialog::backdrop { background: rgba(8, 2, 16, .75); }
+dialog h2 { margin-bottom: .6rem; }
+dialog h3 { margin: .9rem 0 .4rem; font-size: .85rem; color: var(--cyan); }
+dialog .row { display: flex; gap: .5rem; flex-wrap: wrap; }
+dialog p.note { color: var(--muted); font-size: .8rem; margin-top: .4rem; }
+progress { width: 100%; margin-top: 1rem; accent-color: var(--pink); }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 1fr; }
+  #trackList { max-height: 320px; }
+}
