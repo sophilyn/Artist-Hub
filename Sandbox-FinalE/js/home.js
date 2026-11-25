@@ -1,12 +1,17 @@
 // Modular Album Configuration
-// Note: You can easily substitute 'artImage' with a direct image URL (e.g. 'images/cover1.jpg')
+// 'artImage' is an image path relative to index.html (e.g. 'images/cover1.jpg').
+// Leave it "" to use the 'cover' gradient instead. Paths are case-sensitive on most web hosts.
+//
+// 'start' / 'end' pick which part of the song plays on the home page (task #29).
+// Write times as "m:ss", e.g. start:"1:05", end:"1:35" plays 1:05 -> 1:35 and then loops back to 1:05.
+// start:"0:00" = from the beginning, end:"" = until the song ends.
 const albums = [
-  { title:"Applause",   album:"ARTPOP",   year:2013, audio:"Audio/Applause.mp3", cover:"linear-gradient(135deg,#ff4fa3,#7b2ff7)", artImage:"", lyrics:"Write a few lines of lyrics\nor a short description\nof the song here." },
-  { title:"Cowboys And Angles",   album:"Ladies & Gentelmen",   year:1998, audio:"Audio/CowboysAndAngles.mp3", cover:"linear-gradient(135deg,#4de1ff,#2b5876)", artImage:"", lyrics:"Lyrics or description 2\nSecond line of rhythm and flow\nEchoes through the night." },
-  { title:"Last Christmas", album:"LAST CHRISTMAS", year:1984, audio:"Audio/LastChristmas.mp3", cover:"linear-gradient(135deg,#f9d423,#ff4e50)", artImage:"", lyrics:"Lyrics or description 3\nBright sunlight and golden beats." },
-  { title:"One More Night",  album:"Overexposed (Deluxe)",  year:2012, audio:"Audio/OneMoreNight.mp3", cover:"linear-gradient(135deg,#43e97b,#0f3443)", artImage:"", lyrics:"Lyrics or description 4\nDeep synth waves and basslines." },
-  { title:"Stereo Love",  album:"Stereo Love",  year:2009, audio:"Audio/StereoLove.mp3", cover:"linear-gradient(135deg,#fa709a,#fee140)", artImage:"", lyrics:"Lyrics or description 5\nWarm sunset melodies." },
-  { title:"The Lady in My Life",   album:"Thriller",   year:1982, audio:"Audio/TheLadyinMyLife.mp3", cover:"linear-gradient(135deg,#c471ed,#f64f59)", artImage:"images/michael.webp", lyrics:"Lyrics or description 6\nElectric neon dreams and velvet skies\nUnder midnight stars." },
+  { title:"Applause",   album:"ARTPOP",   year:2013, audio:"audio/Applause.mp3", cover:"linear-gradient(135deg,#ff4fa3,#7b2ff7)", artImage:"images/Applause.jpg", start:"0:00", end:"", lyrics:"Write a few lines of lyrics\nor a short description\nof the song here." },
+  { title:"Cowboys And Angels",   album:"Ladies & Gentlemen",   year:1998, audio:"audio/CowboysAndAngels.mp3", cover:"linear-gradient(135deg,#4de1ff,#2b5876)", artImage:"images/LadiesAndGentlemen.jpg", start:"0:00", end:"", lyrics:"Lyrics or description 2\nSecond line of rhythm and flow\nEchoes through the night." },
+  { title:"Last Christmas", album:"LAST CHRISTMAS", year:1984, audio:"audio/LastChristmas.mp3", cover:"linear-gradient(135deg,#f9d423,#ff4e50)", artImage:"images/LastChristmas.jpg", start:"0:00", end:"", lyrics:"Lyrics or description 3\nBright sunlight and golden beats." },
+  { title:"One More Night",  album:"Overexposed (Deluxe)",  year:2012, audio:"audio/OneMoreNight.mp3", cover:"linear-gradient(135deg,#43e97b,#0f3443)", artImage:"images/Overexposed.jpg", start:"0:00", end:"", lyrics:"Lyrics or description 4\nDeep synth waves and basslines." },
+  { title:"Stereo Love",  album:"Stereo Love",  year:2009, audio:"audio/StereoLove.mp3", cover:"linear-gradient(135deg,#fa709a,#fee140)", artImage:"images/StereoLove.webp", start:"0:00", end:"", lyrics:"Lyrics or description 5\nWarm sunset melodies." },
+  { title:"The Lady in My Life",   album:"Thriller",   year:1982, audio:"audio/TheLadyinMyLife.mp3", cover:"linear-gradient(135deg,#c471ed,#f64f59)", artImage:"images/Michael.webp", start:"0:00", end:"", lyrics:"Lyrics or description 6\nElectric neon dreams and velvet skies\nUnder midnight stars." },
 ];
 
 const cd = document.getElementById('cd');
@@ -148,6 +153,55 @@ function stopFallbackSynth() {
   usingFallbackSynth = false;
 }
 
+// ---------- Song part (task #29) ----------
+// Plays only the part of each song between its 'start' and 'end' (see the albums list), on loop.
+let currentClip = { start: 0, end: Infinity };
+
+// Turns "m:ss" text into seconds, e.g. "1:05" -> 65. Empty -> null (= not set)
+function parseTime(text) {
+  if (text === undefined || text === null || String(text).trim() === '') return null;
+  const parts = String(text).trim().split(':').map(Number);
+  if (parts.some(n => isNaN(n) || n < 0)) {
+    console.warn(`Time "${text}" is not valid, use "m:ss" like "1:05"`);
+    return null;
+  }
+  return parts.reduce((total, n) => total * 60 + n, 0); // works for "ss", "m:ss" and "h:mm:ss"
+}
+
+// Works out the start/end seconds for a song and fixes impossible values
+function getClip(album) {
+  const duration = audio.duration;
+  let start = parseTime(album.start) ?? 0;
+  let end = parseTime(album.end) ?? duration;
+  if (start >= duration) {
+    console.warn(`"${album.title}": start ${album.start} is after the song ends, using 0:00`);
+    start = 0;
+  }
+  if (end > duration) end = duration;
+  if (end <= start) {
+    console.warn(`"${album.title}": end must be after start, playing to the end of the song instead`);
+    end = duration;
+  }
+  return { start, end };
+}
+
+// Once the song length is known: work out its part and jump to the start
+audio.addEventListener('loadedmetadata', () => {
+  const album = albums[currentAlbumIndex];
+  if (!album) return;
+  currentClip = getClip(album);
+  audio.currentTime = currentClip.start;
+});
+
+// Loops back to the start when the song passes its end time
+function keepInsideClip() {
+  if (audio.paused || usingFallbackSynth || audio.readyState < 1) return;
+  if (audio.currentTime >= currentClip.end || audio.currentTime < currentClip.start - 0.5) {
+    audio.currentTime = currentClip.start;
+  }
+}
+audio.addEventListener('timeupdate', keepInsideClip);
+
 // Play / Pause handling
 async function playAudio() {
   initAudioContext();
@@ -166,7 +220,14 @@ async function playAudio() {
     audio.play().then(() => {
       stopFallbackSynth();
     }).catch(err => {
-      // Audio file not found or blocked: Seamlessly activate synthesizer stream
+      // Interrupted because another song was picked: the newer play() takes over
+      if (err.name === 'AbortError') return;
+      // Browser blocked autoplay (e.g. hover before any click): go back to paused state
+      if (err.name === 'NotAllowedError') {
+        pauseAudio();
+        return;
+      }
+      // Audio file not found or unsupported: activate synthesizer stream
       startFallbackSynth(currentAlbumIndex);
     });
   } else {
@@ -196,13 +257,17 @@ audio.addEventListener('error', () => {
     startFallbackSynth(currentAlbumIndex);
   }
 });
+// When the end of the file is reached (end:""), loop back to the start time
 audio.addEventListener('ended', () => {
-  pauseAudio();
+  if (!isPlaying) return;
+  audio.currentTime = currentClip.start;
+  audio.play().catch(() => {});
 });
 
 // Real-time render loop driven by AnalyserNode byte frequency data
 function renderEqFrame() {
   requestAnimationFrame(renderEqFrame);
+  keepInsideClip(); // checked every frame so the loop point is accurate
 
   if (analyser && isPlaying) {
     analyser.getByteFrequencyData(freqDataArray);
@@ -256,6 +321,28 @@ function renderEqFrame() {
 // Start continuous requestAnimationFrame loop
 requestAnimationFrame(renderEqFrame);
 
+// Album artwork: shows artImage on the disc and the backdrop card, falls back to the gradient.
+// The path is turned into a full URL first: a relative url() inside a CSS variable is
+// resolved from the stylesheet's folder (css/), so "images/x.webp" would become "css/images/x.webp".
+function applyArtwork(a) {
+  cd.style.setProperty('--cover', a.cover);
+  if (artBackdrop) artBackdrop.style.setProperty('--art-cover', a.cover);
+
+  const src = (a.artImage || '').trim();
+  if (!src) return;
+
+  const fullUrl = new URL(src, document.baseURI).href;
+  const img = new Image();
+  img.onload = () => {
+    if (albums[currentAlbumIndex] !== a) return; // user already moved to another song
+    const cssUrl = `url("${fullUrl}")`;
+    cd.style.setProperty('--cover', cssUrl);
+    if (artBackdrop) artBackdrop.style.setProperty('--art-cover', cssUrl);
+  };
+  img.onerror = () => console.warn(`artImage not found for "${a.title}": ${src}`);
+  img.src = fullUrl;
+}
+
 // Song switching
 function showAlbum(i, autoPlay = false) {
   if (currentAlbumIndex === i) {
@@ -274,14 +361,8 @@ function showAlbum(i, autoPlay = false) {
   if (artBackdrop) artBackdrop.classList.add('fade-transition');
 
   fadeTimeout = setTimeout(() => {
-    // Support image URLs as well as gradient/color backgrounds
-    const effectiveArtwork = (a.artImage && a.artImage.trim() !== "") ? `url("${a.artImage}")` : a.cover;
-    
-    cd.style.setProperty('--cover', a.cover);
-    if (artBackdrop) {
-      artBackdrop.style.setProperty('--art-cover', effectiveArtwork);
-    }
-    
+    applyArtwork(a);
+
     document.getElementById('title').textContent = a.title;
     document.getElementById('album').textContent = a.album;
     document.getElementById('year').textContent = a.year;
@@ -292,7 +373,8 @@ function showAlbum(i, autoPlay = false) {
     if (artBackdrop) artBackdrop.classList.remove('fade-transition');
   }, 160);
 
-  // Update audio source cleanly
+  // Update audio source cleanly (the song part is set again once it loads)
+  currentClip = { start: 0, end: Infinity };
   if (a.audio) {
     audio.src = a.audio;
     audio.load();
