@@ -1,6 +1,15 @@
 /* SHARED FILE (Sophia + Nathan): colors, fonts, nav bar.
    Tell each other before changing this one. */
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Unbounded:wght@600;700&display=swap");
+/* ---------- Custom font (Fonts/ folder) used on every page ---------- */
+/* "Relationship of mélodrame" by @sizimon. The Google fonts above stay as backups
+   in case this file can't load. */
+@font-face {
+  font-family: "Relationship of Melodrame";
+  src: url("../Fonts/RelationshipOfMelodrame.ttf") format("truetype");
+  font-display: swap;
+}
+
 /* ---------- Colors & fonts: change these first ---------- */
 :root {
   --bg: #130722;
@@ -11,8 +20,22 @@
   --cyan: #4de1ff;
   --yellow: #ffe600;
   --purple: #9d4edd;
-  --heading: "Unbounded", "Arial Black", sans-serif;
-  --body: "DM Sans", system-ui, sans-serif;
+  --heading: "Relationship of Melodrame", "Unbounded", "Arial Black", sans-serif;
+  --body: "Relationship of Melodrame", "DM Sans", system-ui, sans-serif;
+}
+
+/* ---------- Custom cursors (images/ folder, 32px) ---------- */
+/* Arrow everywhere; music note on anything you can click (instead of the hand).
+   The two numbers are the "hot spot", the exact pixel that clicks:
+   the arrow's tip (7 6) and the top-left of the note's beam (11 11).
+   "auto" / "pointer" at the end are backups if an image can't load.
+   The Studio page (body.studio-page) keeps Nathan's own cursor from studio.css. */
+body:not(.studio-page) {
+  cursor: url("../images/cursor-arrow.png") 7 6, auto;
+}
+body:not(.studio-page) :is(a, button, select, summary, label, [role="button"],
+                            input[type="range"], .cd, .tabs li) {
+  cursor: url("../images/cursor-note.png") 11 11, pointer;
 }
 * {
   box-sizing: border-box;
