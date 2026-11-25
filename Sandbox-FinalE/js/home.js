@@ -21,6 +21,13 @@ const eq = document.getElementById('eq');
 const audio = document.getElementById('audio');
 const infoContent = document.getElementById('info-content');
 
+// Opened straight from disk (address starts with file:///, e.g. double-clicking index.html)?
+// Then browsers refuse the MP3 when crossorigin is set, and won't let the equalizer read
+// the song's sound (it would go silent). So from disk: play the song directly and
+// animate the bars instead. On a server (Live Server, GitHub Pages) the real analyser is used.
+const openedFromDisk = location.protocol === 'file:';
+if (openedFromDisk) audio.removeAttribute('crossorigin');
+
 let isPlaying = false;
 let currentAlbumIndex = -1;
 let fadeTimeout;
@@ -85,12 +92,14 @@ function initAudioContext() {
   analyser.smoothingTimeConstant = 0.83;
   freqDataArray = new Uint8Array(analyser.frequencyBinCount);
 
-  try {
-    sourceNode = audioCtx.createMediaElementSource(audio);
-    sourceNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
-  } catch (err) {
-    console.warn("MediaElementSource connection note:", err);
+  analyser.connect(audioCtx.destination);
+  if (!openedFromDisk) {
+    try {
+      sourceNode = audioCtx.createMediaElementSource(audio);
+      sourceNode.connect(analyser);
+    } catch (err) {
+      console.warn("MediaElementSource connection note:", err);
+    }
   }
 
   // Master Gain for synthetic fallback audio
@@ -264,23 +273,41 @@ audio.addEventListener('ended', () => {
   audio.play().catch(() => {});
 });
 
+// Beat-like bar height (0 to 1) for column c at time t, used when opened from disk.
+// Taller on the left (bass), with a pulse about twice a second and a little randomness.
+function simulatedLevel(c, t) {
+  const bass = 1 - c / COL_COUNT;
+  const wave = Math.sin(t * 6 + c * 0.45) * 0.5 + 0.5;
+  const pulse = Math.pow(Math.sin(t * 4.2) * 0.5 + 0.5, 3);
+  return Math.min(1, 0.12 + 0.45 * wave * (0.4 + 0.6 * bass) + 0.4 * pulse * bass + Math.random() * 0.12);
+}
+
 // Real-time render loop driven by AnalyserNode byte frequency data
 function renderEqFrame() {
   requestAnimationFrame(renderEqFrame);
   keepInsideClip(); // checked every frame so the loop point is accurate
 
+  // From disk the analyser can't hear the MP3, so the bars follow a made-up beat instead
+  const simulate = openedFromDisk && !usingFallbackSynth;
+
   if (analyser && isPlaying) {
     analyser.getByteFrequencyData(freqDataArray);
     const binCount = analyser.frequencyBinCount; // 128 bins
+    const t = performance.now() / 1000;
 
     for (let c = 0; c < COL_COUNT; c++) {
-      // Non-linear acoustic mapping (more emphasis on bass and mid frequencies)
-      const ratio = Math.pow(c / (COL_COUNT - 1), 1.6);
-      const binIndex = Math.min(binCount - 1, Math.max(0, Math.floor(ratio * (binCount * 0.85))));
-      const rawValue = freqDataArray[binIndex] || 0;
+      let normalized;
+      if (simulate) {
+        normalized = simulatedLevel(c, t);
+      } else {
+        // Non-linear acoustic mapping (more emphasis on bass and mid frequencies)
+        const ratio = Math.pow(c / (COL_COUNT - 1), 1.6);
+        const binIndex = Math.min(binCount - 1, Math.max(0, Math.floor(ratio * (binCount * 0.85))));
+        const rawValue = freqDataArray[binIndex] || 0;
 
-      // Subtle dynamic range expansion for expressive visual pop
-      const normalized = Math.min(1, Math.max(0, (rawValue / 245)));
+        // Subtle dynamic range expansion for expressive visual pop
+        normalized = Math.min(1, Math.max(0, (rawValue / 245)));
+      }
       const targetBar = Math.floor(normalized * BLOCKS_PER_COL);
 
       // Smooth easing per column
